@@ -8,8 +8,10 @@ int main(void)
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Sunshine");
     SetTargetFPS(60);       //this function sets the fps (very useful because we don't have to count tiks as in SDL)
 
+    InitAudioDevice();
+
     Texture2D shrek = LoadTexture("../game/assets/textures/shrek.png");  // This function loads textures and we can later draw the textures
-    Sound roar = LoadSound("../game/assets/textures/roar.mp3");
+    Sound roar = LoadSound("../game/assets/textures/shrekroar.mp3");
     
     while (!WindowShouldClose())
     {
@@ -41,7 +43,10 @@ int main(void)
 
         if (collision)
         {
-            PlaySound(roar);
+            if (!IsSoundPlaying(roar))
+            {
+             PlaySound(roar);
+            }
             DrawText("RAAAAW!!!!", 0, 20, 55, RED);
             DrawTexture(shrek, 0, 100, RAYWHITE);
             DrawCircle(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 100, 50.0, RED); //draw a red circle over head
