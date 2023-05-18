@@ -6,9 +6,10 @@
 int main(void)
 {
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Sunshine");
-    SetTargetFPS(60);
+    SetTargetFPS(60);       //this function sets the fps (very useful because we don't have to count tiks as in SDL)
 
-    Texture2D shrek = LoadTexture("boots.png");
+    Texture2D shrek = LoadTexture("../game/assets/textures/shrek.png");  // This function loads textures and we can later draw the textures
+    Sound roar = LoadSound("../game/assets/textures/roar.mp3");
     
     while (!WindowShouldClose())
     {
@@ -37,11 +38,12 @@ int main(void)
 
         bool collision = CheckCollisionCircles(mouseCenter, 15.0f, headCenter, 50.0f); //check collision between head and mouse
 
-        //DrawTexture(shrek, 0, 0, BLANK);
 
         if (collision)
         {
-            DrawText("OUCH!!!!", SCREEN_WIDTH / 2, 20, 55, RED);
+            PlaySound(roar);
+            DrawText("RAAAAW!!!!", 0, 20, 55, RED);
+            DrawTexture(shrek, 0, 100, RAYWHITE);
             DrawCircle(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 100, 50.0, RED); //draw a red circle over head
         }
         EndDrawing();
