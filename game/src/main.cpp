@@ -5,6 +5,82 @@
 #define SCREEN_HEIGHT 720
 float dt = 1.0f / 240.0f;
 
+
+class Agent
+{
+public:
+    Vector2 position;
+    Vector2 toTarget;
+    Vector2 desiredVel;
+    Vector2 deltaVel;
+    Vector2 deltaVelnorm;
+    float currentSpeed;
+    Vector2 maxSpeed;
+    Vector2 acceleration;
+    Vector2 maxAccel;
+    Vector2 velocity;
+
+    Agent()
+    {
+        position = { (SCREEN_WIDTH / 2), (SCREEN_HEIGHT / 2) };
+        toTarget = { 0,0 };
+        desiredVel = { 0,0 };
+        deltaVel = { 0,0 };
+        deltaVelnorm = { 0,0 };
+        currentSpeed = 0.0f;
+        maxSpeed = { 300, 300};
+        acceleration = { 0,0 };
+        maxAccel = { 500, 500 };
+        velocity = { 0,0 };
+    }
+
+    void UpdatePhysicsSeek(Vector2 mouse, float dt)
+    {
+        toTarget = Vector2Normalize(Vector2Subtract(mouse, position));
+        desiredVel = Vector2Multiply(toTarget, maxSpeed);
+        deltaVel = Vector2Subtract(desiredVel, velocity);
+        deltaVelnorm = Vector2Normalize(deltaVel);
+        acceleration = Vector2Multiply(deltaVelnorm, maxAccel);
+        position.x += velocity.x * dt + (acceleration.x * dt * dt * 0.5);
+        position.y += velocity.y * dt + (acceleration.y * dt * dt * 0.5);
+        velocity.x += acceleration.x * dt;
+        velocity.y += acceleration.y * dt;
+        currentSpeed = Vector2Length(velocity);
+        if (currentSpeed > maxSpeed.x)
+        {
+            velocity.x = velocity.x * (maxSpeed.x / currentSpeed);
+        }
+        if (currentSpeed > maxSpeed.y)
+        {
+            velocity.y = velocity.y * (maxSpeed.y / currentSpeed);
+        }
+    }
+    void UpdatePhysicsFlee(Vector2 mouse, float dt)
+    {
+        toTarget = Vector2Normalize(Vector2Subtract(mouse, position));
+        desiredVel = Vector2Multiply(toTarget, maxSpeed);
+        desiredVel = { (-1) * (desiredVel.x), (-1) * (desiredVel.y) };
+        deltaVel = Vector2Subtract(desiredVel, velocity);
+        deltaVelnorm = Vector2Normalize(deltaVel);
+        acceleration = Vector2Multiply(deltaVelnorm, maxAccel);
+        position.x += velocity.x * dt + (acceleration.x * dt * dt * 0.5);
+        position.y += velocity.y * dt + (acceleration.y * dt * dt * 0.5);
+        velocity.x += acceleration.x * dt;
+        velocity.y += acceleration.y * dt;
+        currentSpeed = Vector2Length(velocity);
+        if (currentSpeed > maxSpeed.x)
+        {
+            velocity.x = velocity.x * (maxSpeed.x / currentSpeed);
+        }
+        if (currentSpeed > maxSpeed.y)
+        {
+            velocity.y = velocity.y * (maxSpeed.y / currentSpeed);
+        }
+    }
+    
+
+};
+
 Vector2 WrapAroundScreen(Vector2 position)
 {
     Vector2 outPosition = 
@@ -22,45 +98,57 @@ int main(void)
     SetTargetFPS(240);
     rlImGuiSetup(true);
 
-    Vector2 vel = { 100, 100};
-    Vector2 pos = { 0, (SCREEN_HEIGHT / 2) };
-    Vector2 maxSpeed = { 1000, 1000 };
-    Vector2 acceleration = { 50, 50};
-    float maxAccel = 500;
+    Agent BlueCircle;
+    Agent YellowCircle;
+    Vector2 mouse;
    
     while (!WindowShouldClose())
     {
         BeginDrawing();
         ClearBackground(RAYWHITE);
         rlImGuiBegin();
-        ImGui::DragFloat2("Position", &pos.x, 1, 0, SCREEN_WIDTH);
-        ImGui::DragFloat2("Velocity", &vel.x, 1, -maxSpeed.x, maxSpeed.x);
-        ImGui::DragFloat2("Acceleration", &acceleration.x, 1, -maxAccel, maxAccel);
-        pos.x += vel.x * dt + (acceleration.x * dt * dt * 0.5);
-        pos.y += vel.y * dt + (acceleration.y * dt * dt * 0.5);
-        pos = WrapAroundScreen(pos);
-        vel.x += acceleration.x * dt;
-        vel.y += acceleration.y * dt;
-        if (vel.x >= maxSpeed.x)
+
+        ImGui::DragFloat2("Position", &BlueCircle.position.x, 1, 0, SCREEN_WIDTH);
+        ImGui::DragFloat2("Velocity", &BlueCircle.velocity.x, 1, -BlueCircle.maxSpeed.x, BlueCircle.maxSpeed.x);
+        ImGui::DragFloat2("Acceleration", &BlueCircle.acceleration.x, 1, -BlueCircle.maxAccel.x, BlueCircle.maxAccel.x);
+        ImGui::DragFloat("MaxAcceleration", &BlueCircle.maxAccel.x, 1, -BlueCircle.maxAccel.x, BlueCircle.maxAccel.x);
+
+        mouse.x = GetMouseX();
+        mouse.y = GetMouseY();
+        BlueCircle.UpdatePhysicsSeek(mouse, dt);
+        YellowCircle.UpdatePhysicsFlee(mouse, dt);
+        YellowCircle.position = WrapAroundScreen(YellowCircle.position);
+        bool collision = false;
+
+        DrawCircle(BlueCircle.position.x, BlueCircle.position.y, 30, BLUE);
+        DrawCircle(YellowCircle.position.x, YellowCircle.position.y, 30, YELLOW);
+
+        collision = CheckCollisionCircles(BlueCircle.position, 30, mouse, 30);
+        if (collision)
         {
-            vel.x = maxSpeed.x;
+            BlueCircle.acceleration = { 0,0 };
+            BlueCircle.velocity = { 0,0 };
         }
-        if (vel.x <= -maxSpeed.x)
+        collision = CheckCollisionCircles(YellowCircle.position, 30, mouse, 30);
+        if (collision)
         {
-            vel.x = -maxSpeed.x;
+            YellowCircle.acceleration = { 0,0 };
+            YellowCircle.velocity = { 0,0 };
         }
-        if (vel.y >= maxSpeed.y)
-        {
-            vel.y = maxSpeed.y;
-        }
-        if (vel.y <= -maxSpeed.y)
-        {
-            vel.y = -maxSpeed.y;
-        }
+        DrawCircle(mouse.x, mouse.y, 30, PINK);
+        DrawLine(BlueCircle.position.x, BlueCircle.position.y, (BlueCircle.position.x + BlueCircle.velocity.x * 1), (BlueCircle.position.y + BlueCircle.velocity.y * 1), RED);
+        DrawLine(BlueCircle.position.x, BlueCircle.position.y, (BlueCircle.position.x + BlueCircle.acceleration.x), (BlueCircle.position.y + BlueCircle.acceleration.y * 1), GREEN);
+        DrawLine(BlueCircle.position.x, BlueCircle.position.y, ((BlueCircle.position.x + BlueCircle.desiredVel.x)), ((BlueCircle.position.y + BlueCircle.desiredVel.y)), BLACK);
+        
+        DrawLine(YellowCircle.position.x, YellowCircle.position.y, (YellowCircle.position.x + YellowCircle.velocity.x * 1), (YellowCircle.position.y + YellowCircle.velocity.y * 1), RED);
+        DrawLine(YellowCircle.position.x, YellowCircle.position.y, (YellowCircle.position.x + YellowCircle.acceleration.x), (YellowCircle.position.y + YellowCircle.acceleration.y * 1), GREEN);
+        DrawLine(YellowCircle.position.x, YellowCircle.position.y, ((YellowCircle.position.x + YellowCircle.desiredVel.x)), ((YellowCircle.position.y + YellowCircle.desiredVel.y)), BLACK);
+
+
         rlImGuiEnd();
-        DrawCircle(pos.x, pos.y, 30, BLUE);
         EndDrawing();
     }
+
     rlImGuiShutdown();
     CloseWindow();
     return 0;
