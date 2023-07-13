@@ -1,4 +1,5 @@
 #include "rlImGui.h"
+#include "raymath.h"
 #include <raylib.h>
 #include "raymath.h"
 #define SCREEN_WIDTH 1280
@@ -95,8 +96,7 @@ Vector2 WrapAroundScreen(Vector2 position)
 int main(void)
 {
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Sunshine");
-    SetTargetFPS(240);
-    rlImGuiSetup(true);
+    SetTargetFPS(60);
 
     Agent BlueCircle;
     Agent YellowCircle;
@@ -106,46 +106,7 @@ int main(void)
     {
         BeginDrawing();
         ClearBackground(RAYWHITE);
-        rlImGuiBegin();
-
-        ImGui::DragFloat2("Position", &BlueCircle.position.x, 1, 0, SCREEN_WIDTH);
-        ImGui::DragFloat2("Velocity", &BlueCircle.velocity.x, 1, -BlueCircle.maxSpeed.x, BlueCircle.maxSpeed.x);
-        ImGui::DragFloat2("Acceleration", &BlueCircle.acceleration.x, 1, -BlueCircle.maxAccel.x, BlueCircle.maxAccel.x);
-        ImGui::DragFloat("MaxAcceleration", &BlueCircle.maxAccel.x, 1, -BlueCircle.maxAccel.x, BlueCircle.maxAccel.x);
-
-        mouse.x = GetMouseX();
-        mouse.y = GetMouseY();
-        BlueCircle.UpdatePhysicsSeek(mouse, dt);
-        YellowCircle.UpdatePhysicsFlee(mouse, dt);
-        YellowCircle.position = WrapAroundScreen(YellowCircle.position);
-        bool collision = false;
-
-        DrawCircle(BlueCircle.position.x, BlueCircle.position.y, 30, BLUE);
-        DrawCircle(YellowCircle.position.x, YellowCircle.position.y, 30, YELLOW);
-
-        collision = CheckCollisionCircles(BlueCircle.position, 30, mouse, 30);
-        if (collision)
-        {
-            BlueCircle.acceleration = { 0,0 };
-            BlueCircle.velocity = { 0,0 };
-        }
-        collision = CheckCollisionCircles(YellowCircle.position, 30, mouse, 30);
-        if (collision)
-        {
-            YellowCircle.acceleration = { 0,0 };
-            YellowCircle.velocity = { 0,0 };
-        }
-        DrawCircle(mouse.x, mouse.y, 30, PINK);
-        DrawLine(BlueCircle.position.x, BlueCircle.position.y, (BlueCircle.position.x + BlueCircle.velocity.x * 1), (BlueCircle.position.y + BlueCircle.velocity.y * 1), RED);
-        DrawLine(BlueCircle.position.x, BlueCircle.position.y, (BlueCircle.position.x + BlueCircle.acceleration.x), (BlueCircle.position.y + BlueCircle.acceleration.y * 1), GREEN);
-        DrawLine(BlueCircle.position.x, BlueCircle.position.y, ((BlueCircle.position.x + BlueCircle.desiredVel.x)), ((BlueCircle.position.y + BlueCircle.desiredVel.y)), BLACK);
-        
-        DrawLine(YellowCircle.position.x, YellowCircle.position.y, (YellowCircle.position.x + YellowCircle.velocity.x * 1), (YellowCircle.position.y + YellowCircle.velocity.y * 1), RED);
-        DrawLine(YellowCircle.position.x, YellowCircle.position.y, (YellowCircle.position.x + YellowCircle.acceleration.x), (YellowCircle.position.y + YellowCircle.acceleration.y * 1), GREEN);
-        DrawLine(YellowCircle.position.x, YellowCircle.position.y, ((YellowCircle.position.x + YellowCircle.desiredVel.x)), ((YellowCircle.position.y + YellowCircle.desiredVel.y)), BLACK);
-
-
-        rlImGuiEnd();
+        DrawText("Hello World!", 16, 9, 20, RED);
         EndDrawing();
     }
 
