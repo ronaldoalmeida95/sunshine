@@ -101,6 +101,7 @@ int main(void)
             ImGui::ShowDemoWindow(nullptr);
             rlImGuiEnd();
         }
+        cout << "LOLOLOL" << endl;
 
         EndDrawing();
     }
